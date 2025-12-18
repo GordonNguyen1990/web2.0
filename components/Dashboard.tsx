@@ -139,6 +139,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
   const [mfaCode, setMfaCode] = useState('');
   const [isEnrollingMfa, setIsEnrollingMfa] = useState(false);
   const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+  
+  // Withdrawal State
+  const [withdrawAddress, setWithdrawAddress] = useState('');
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   // Ref Data Loading State
   const [isRefreshingRefs, setIsRefreshingRefs] = useState(false);
@@ -232,14 +236,47 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
     setIsConnecting(false);
   };
 
-  const handleFundSubmit = (e: React.FormEvent) => {
+  const handleFundSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = parseFloat(amount);
     if (isNaN(val) || val <= 0) return;
     
-    if (fundAction === 'withdraw' && val > user.balance) {
-      alert("Số dư không đủ!");
-      return;
+    if (fundAction === 'withdraw') {
+        if (val > user.balance) {
+            alert("Số dư không đủ!");
+            return;
+        }
+        if (!withdrawAddress) {
+            alert("Vui lòng nhập địa chỉ ví nhận tiền!");
+            return;
+        }
+
+        setIsWithdrawing(true);
+        try {
+            const res = await fetch('/.netlify/functions/create_withdrawal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: user.id,
+                    amount: val,
+                    wallet_address: withdrawAddress
+                })
+            });
+            const data = await res.json();
+            
+            if (data.error) throw new Error(data.error);
+            
+            alert("Yêu cầu rút tiền thành công! Vui lòng chờ Admin phê duyệt.");
+            onUserUpdate({ ...user, balance: data.new_balance });
+            onTransaction('WITHDRAW', val, true); // Update history without extra DB call
+            setAmount('');
+            setWithdrawAddress('');
+        } catch (err: any) {
+            alert("Lỗi rút tiền: " + err.message);
+        } finally {
+            setIsWithdrawing(false);
+        }
+        return;
     }
 
     onTransaction(fundAction === 'deposit' ? 'DEPOSIT' : 'WITHDRAW', val);
@@ -764,6 +801,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
                               </div>
                           </div>
 
+                          <div>
+                              <label className="block text-sm text-gray-300 mb-2">Địa chỉ ví nhận tiền (BEP20)</label>
+                              <div className="relative">
+                                  <input 
+                                      type="text"
+                                      value={withdrawAddress}
+                                      onChange={(e) => setWithdrawAddress(e.target.value)}
+                                      className="w-full bg-dark-950 border border-gray-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-brand-500 outline-none font-mono text-sm"
+                                      placeholder="0x..."
+                                  />
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">Lưu ý: Chỉ hỗ trợ mạng BNB Chain (BEP20). Nhập sai ví có thể mất tiền.</p>
+                          </div>
+
                           <div className="flex justify-between items-center text-sm p-3 bg-orange-900/10 border border-orange-900/30 rounded-lg text-orange-300">
                               <span>Phí giao dịch ({config.withdrawalFeePercent}%)</span>
                               <span className="font-mono">-${amount ? (parseFloat(amount) * config.withdrawalFeePercent / 100).toFixed(2) : '0.00'}</span>
@@ -771,9 +822,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
 
                           <button 
                               type="submit"
-                              className="w-full py-4 rounded-xl text-base font-bold text-white transition-all transform hover:scale-[1.02] bg-gradient-to-r from-orange-600 to-orange-500 shadow-lg shadow-orange-500/20"
+                              disabled={isWithdrawing}
+                              className={`w-full py-4 rounded-xl text-base font-bold text-white transition-all transform hover:scale-[1.02] ${isWithdrawing ? 'bg-gray-700 cursor-not-allowed' : 'bg-gradient-to-r from-orange-600 to-orange-500 shadow-lg shadow-orange-500/20'}`}
                           >
-                              Yêu cầu Rút về Ví
+                              {isWithdrawing ? 'Đang gửi yêu cầu...' : 'Yêu cầu Rút về Ví'}
                           </button>
                        </form>
                    ) : (

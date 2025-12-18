@@ -15,6 +15,70 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ config, users, onUpdateConfig, 
   const [withdrawalFee, setWithdrawalFee] = useState(config.withdrawalFeePercent);
   const [message, setMessage] = useState('');
 
+  // Withdrawal Management
+  const [pendingWithdrawals, setPendingWithdrawals] = useState<any[]>([]);
+  const [isLoadingWithdrawals, setIsLoadingWithdrawals] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  React.useEffect(() => {
+      fetchPendingWithdrawals();
+  }, []);
+
+  const fetchPendingWithdrawals = async () => {
+      setIsLoadingWithdrawals(true);
+      try {
+          // This should ideally be an API call or Supabase query
+          // Simulating fetch for now or we need to pass Supabase client
+          // Since we don't have direct Supabase access here in props, we might need to rely on parent or fetch from function
+          // For security, Admin actions should be server-side or protected.
+          // Let's assume we fetch from a new endpoint or pass Supabase.
+          // For simplicity in this structure, let's use a Netlify function to list pending withdrawals
+          // But wait, we don't have a 'list_withdrawals' function. 
+          // Let's mock it or create it? User asked for "Admin confirm".
+          // Better: Create a function to fetch pending txs.
+          const res = await fetch('/.netlify/functions/get_pending_withdrawals', {
+               method: 'POST',
+               headers: {'Content-Type': 'application/json'},
+               body: JSON.stringify({ admin_id: users.find(u => u.role === UserRole.ADMIN)?.id || 'admin' }) 
+          });
+          if (res.ok) {
+              const data = await res.json();
+              setPendingWithdrawals(data.transactions || []);
+          }
+      } catch (e) {
+          console.error("Error fetching withdrawals", e);
+      } finally {
+          setIsLoadingWithdrawals(false);
+      }
+  };
+
+  const handleApproveWithdrawal = async (txId: string) => {
+      if (!window.confirm("Bạn có chắc chắn muốn duyệt yêu cầu rút tiền này? Tiền sẽ được chuyển ngay lập tức qua NOWPayments.")) return;
+      
+      setProcessingId(txId);
+      try {
+          const res = await fetch('/.netlify/functions/approve_withdrawal', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  transaction_id: txId,
+                  admin_id: users.find(u => u.role === UserRole.ADMIN)?.id
+              })
+          });
+          const data = await res.json();
+          
+          if (data.error) throw new Error(data.error);
+          
+          alert("Duyệt thành công! Mã Payout: " + (data.payout_data?.id || 'N/A'));
+          // Remove from list
+          setPendingWithdrawals(prev => prev.filter(p => p.id !== txId));
+      } catch (err: any) {
+          alert("Lỗi duyệt: " + err.message);
+      } finally {
+          setProcessingId(null);
+      }
+  };
+
   const handleSave = () => {
     onUpdateConfig({
       interestRatePercent: Number(interestRate),
@@ -93,6 +157,59 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ config, users, onUpdateConfig, 
             Lưu thay đổi
           </button>
           {message && <span className="text-green-400 animate-pulse">{message}</span>}
+        </div>
+
+        {/* Withdrawal Requests */}
+        <div className="bg-dark-900 rounded-xl border border-gray-800 shadow-lg overflow-hidden mb-8">
+            <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-orange-400">Yêu cầu Rút tiền (Pending)</h2>
+                <button onClick={fetchPendingWithdrawals} className="text-sm text-brand-400 hover:text-white">Làm mới</button>
+            </div>
+            <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                    <thead className="bg-dark-950 text-gray-400 uppercase text-xs">
+                        <tr>
+                            <th className="px-6 py-4">ID</th>
+                            <th className="px-6 py-4">User</th>
+                            <th className="px-6 py-4">Số tiền</th>
+                            <th className="px-6 py-4">Ví nhận (BEP20)</th>
+                            <th className="px-6 py-4">Ngày tạo</th>
+                            <th className="px-6 py-4">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                        {pendingWithdrawals.map(tx => {
+                            const user = users.find(u => u.id === tx.user_id);
+                            const wallet = tx.metadata?.wallet_address || tx.description?.split(': ')[1] || 'N/A';
+                            return (
+                                <tr key={tx.id} className="hover:bg-dark-800/50">
+                                    <td className="px-6 py-4 text-xs font-mono text-gray-500">{tx.id.slice(0, 8)}...</td>
+                                    <td className="px-6 py-4 text-sm text-white">{user?.email || tx.user_id}</td>
+                                    <td className="px-6 py-4 text-sm font-bold text-orange-400">${tx.amount.toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-xs font-mono text-gray-300 bg-dark-950 p-1 rounded">{wallet}</td>
+                                    <td className="px-6 py-4 text-xs text-gray-500">{new Date(tx.created_at || Date.now()).toLocaleDateString()}</td>
+                                    <td className="px-6 py-4">
+                                        <button 
+                                            onClick={() => handleApproveWithdrawal(tx.id)}
+                                            disabled={processingId === tx.id}
+                                            className="px-3 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded shadow disabled:opacity-50"
+                                        >
+                                            {processingId === tx.id ? 'Đang xử lý...' : 'Duyệt Chi'}
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                        {pendingWithdrawals.length === 0 && (
+                            <tr>
+                                <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                                    {isLoadingWithdrawals ? 'Đang tải...' : 'Không có yêu cầu rút tiền nào đang chờ.'}
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         {/* User List Table */}
