@@ -20,7 +20,7 @@ export interface Transaction {
   type: 'DEPOSIT' | 'WITHDRAW' | 'INTEREST';
   amount: number;
   date: string;
-  status: 'PENDING' | 'COMPLETED' | 'FAILED';
+  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'PROCESSING';
   fee?: number;
 }
 

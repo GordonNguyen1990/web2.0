@@ -147,8 +147,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
   // Ref Data Loading State
   const [isRefreshingRefs, setIsRefreshingRefs] = useState(false);
 
-  // Lưu activeTab vào localStorage mỗi khi thay đổi
-  useEffect(() => {
+    // Auto-refresh PROCESSING withdrawals for user
+    useEffect(() => {
+        const processingWithdrawals = transactions.filter(tx => tx.type === 'WITHDRAW' && tx.status === 'PROCESSING');
+        if (processingWithdrawals.length === 0) return;
+
+        // In a real app, we would enable realtime subscription or polling here
+        // to update the UI when the status changes from PROCESSING to COMPLETED.
+        // For now, we rely on page refresh or manual actions.
+    }, [transactions]);
+
+    // Lưu activeTab vào localStorage mỗi khi thay đổi
+    useEffect(() => {
       localStorage.setItem('activeTab', activeTab);
   }, [activeTab]);
 
@@ -934,14 +944,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
                                 <tr key={tx.id} className="hover:bg-dark-800/50">
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                            tx.status === 'PROCESSING' ? 'bg-orange-400/10 text-orange-400' :
                                             tx.type === 'DEPOSIT' ? 'bg-green-400/10 text-green-400' : 
                                             tx.type === 'WITHDRAW' ? 'bg-orange-400/10 text-orange-400' : 'bg-blue-400/10 text-blue-400'
                                         }`}>
-                                            {tx.type}
+                                            {tx.status === 'PROCESSING' ? 'Pending...' : tx.type}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 font-mono font-bold text-white">${tx.amount.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-green-400">{tx.status}</td>
+                                    <td className={`px-6 py-4 ${tx.status === 'PROCESSING' ? 'text-orange-400' : tx.status === 'COMPLETED' ? 'text-green-400' : 'text-gray-400'}`}>
+                                        {tx.status === 'PROCESSING' ? (
+                                            <span className="flex items-center gap-1">
+                                                <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                                                Pending...
+                                            </span>
+                                        ) : tx.status}
+                                    </td>
                                     <td className="px-6 py-4 text-gray-400">{new Date(tx.date).toLocaleDateString()}</td>
                                 </tr>
                             ))}

@@ -20,6 +20,35 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ config, users, onUpdateConfig, 
   const [isLoadingWithdrawals, setIsLoadingWithdrawals] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
+  // Auto-refresh withdrawals that are PROCESSING
+  React.useEffect(() => {
+      const interval = setInterval(async () => {
+          // Find withdrawals that are PROCESSING
+          const processingWithdrawals = pendingWithdrawals.filter(tx => tx.status === 'PROCESSING');
+          
+          if (processingWithdrawals.length > 0) {
+              // Reload the list to see if any updated
+              // Or call verify_payout_status for each
+              // For simplicity, just reloading list might not update DB status if we don't trigger check
+              // So we should trigger check for them.
+              
+              for (const tx of processingWithdrawals) {
+                  if (tx.tx_hash && tx.tx_hash.startsWith('5')) { // Payout IDs usually start with number/string, not REQ_
+                      try {
+                          await fetch('/.netlify/functions/verify_payout_status', {
+                              method: 'POST',
+                              headers: {'Content-Type': 'application/json'},
+                              body: JSON.stringify({ payout_id: tx.tx_hash })
+                          });
+                      } catch(e) { console.error(e); }
+                  }
+              }
+              fetchPendingWithdrawals(); // Refresh UI
+          }
+      }, 10000); // Check every 10s
+      return () => clearInterval(interval);
+  }, [pendingWithdrawals]);
+
   React.useEffect(() => {
       fetchPendingWithdrawals();
   }, []);
@@ -69,9 +98,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ config, users, onUpdateConfig, 
           
           if (data.error) throw new Error(data.error);
           
-          alert("Duyệt thành công! Mã Payout: " + (data.payout_data?.id || 'N/A'));
-          // Remove from list
-          setPendingWithdrawals(prev => prev.filter(p => p.id !== txId));
+          alert("Duyệt thành công! Đang chờ NOWPayments xử lý (Payout ID: " + (data.payout_data?.id || 'N/A') + ")");
+          
+          // Update status in list to PROCESSING immediately to reflect UI
+          setPendingWithdrawals(prev => prev.map(p => 
+              p.id === txId 
+              ? { ...p, status: 'PROCESSING', tx_hash: data.payout_data?.id } 
+              : p
+          ));
       } catch (err: any) {
           alert("Lỗi duyệt: " + err.message);
       } finally {
@@ -189,13 +223,20 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ config, users, onUpdateConfig, 
                                     <td className="px-6 py-4 text-xs font-mono text-gray-300 bg-dark-950 p-1 rounded">{wallet}</td>
                                     <td className="px-6 py-4 text-xs text-gray-500">{new Date(tx.created_at || Date.now()).toLocaleDateString()}</td>
                                     <td className="px-6 py-4">
-                                        <button 
-                                            onClick={() => handleApproveWithdrawal(tx.id)}
-                                            disabled={processingId === tx.id}
-                                            className="px-3 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded shadow disabled:opacity-50"
-                                        >
-                                            {processingId === tx.id ? 'Đang xử lý...' : 'Duyệt Chi'}
-                                        </button>
+                                        {tx.status === 'PROCESSING' ? (
+                                            <span className="text-orange-400 font-bold text-xs flex items-center gap-1">
+                                                <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                                                Pending NOWPayments...
+                                            </span>
+                                        ) : (
+                                            <button 
+                                                onClick={() => handleApproveWithdrawal(tx.id)}
+                                                disabled={processingId === tx.id}
+                                                className="px-3 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded shadow disabled:opacity-50"
+                                            >
+                                                {processingId === tx.id ? 'Đang xử lý...' : 'Duyệt Chi'}
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             );

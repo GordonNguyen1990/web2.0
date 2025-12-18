@@ -102,7 +102,7 @@ export default async (req: Request, context: Context) => {
     const { error: updateError } = await supabase
         .from('transactions')
         .update({ 
-            status: 'COMPLETED', // Or PROCESSING, but assuming success for now
+            status: 'PROCESSING', // Changed from COMPLETED to PROCESSING
             tx_hash: payoutId,
             description: `${tx.description} (Payout ID: ${payoutId})`
         })

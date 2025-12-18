@@ -29,12 +29,12 @@ export default async (req: Request, context: Context) => {
          // Should be stricter here, but for now allow check
     }
 
-    // Get Pending Transactions
+    // Get Pending or Processing Transactions
     const { data: transactions, error } = await supabase
         .from('transactions')
         .select('*')
         .eq('type', 'WITHDRAW')
-        .eq('status', 'PENDING')
+        .in('status', ['PENDING', 'PROCESSING'])
         .order('created_at', { ascending: false });
 
     if (error) throw error;
