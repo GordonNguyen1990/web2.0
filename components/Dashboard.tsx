@@ -63,7 +63,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
 
   const [amount, setAmount] = useState<string>('');
   const [fundAction, setFundAction] = useState<'deposit' | 'withdraw' | 'swap'>('deposit');
-  const [depositMethod, setDepositMethod] = useState<'crypto' | 'fiat' | 'qr'>('crypto'); 
+  const [depositMethod, setDepositMethod] = useState<'crypto' | 'fiat' | 'qr' | 'momo' | 'payos'>('crypto'); 
   const [aiAdvice, setAiAdvice] = useState<string>('');
   const [loadingAi, setLoadingAi] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -234,6 +234,80 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
 
   const chartData = generateGrowthData();
 
+  const handlePayOSDeposit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      const val = parseFloat(amount);
+      if (isNaN(val) || val <= 0) {
+          alert("Vui lòng nhập số tiền hợp lệ");
+          return;
+      }
+
+      try {
+          // PayOS usually uses VND. Convert USD -> VND (approx)
+          const amountVnd = Math.round(val * 25000); 
+          if (amountVnd < 2000) { // PayOS min usually 2000 VND
+              alert("Số tiền quá nhỏ.");
+              return;
+          }
+
+          const res = await fetch('/.netlify/functions/create_payos_payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  amount: amountVnd,
+                  userId: user.id
+              })
+          });
+          
+          const data = await res.json();
+          if (data.error) throw new Error(data.error);
+          if (data.checkoutUrl) {
+              window.location.href = data.checkoutUrl;
+          }
+      } catch (err: any) {
+          alert("Lỗi tạo thanh toán PayOS: " + err.message);
+      }
+  };
+
+  const handleMomoDeposit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      const val = parseFloat(amount);
+      if (isNaN(val) || val <= 0) {
+          alert("Vui lòng nhập số tiền hợp lệ");
+          return;
+      }
+
+      try {
+          // Convert USD to VND roughly if needed, or just send raw. 
+          // MoMo expects VND. Let's assume input is USD and convert x 25000.
+          // Or if input is VND, just send it.
+          // Let's assume input on UI is USD.
+          const amountVnd = Math.round(val * 25000); 
+          
+          if (amountVnd < 10000) {
+              alert("Số tiền nạp tối thiểu là 10,000 VND (~$0.4)");
+              return;
+          }
+
+          const res = await fetch('/.netlify/functions/create_momo_payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  amount: amountVnd,
+                  userId: user.id
+              })
+          });
+          
+          const data = await res.json();
+          if (data.error) throw new Error(data.error);
+          if (data.payUrl) {
+              window.location.href = data.payUrl;
+          }
+      } catch (err: any) {
+          alert("Lỗi tạo thanh toán MoMo: " + err.message);
+      }
+  };
+
   const handleConnectWallet = async () => {
     setIsConnecting(true);
     const addr = await connectWallet();
@@ -272,7 +346,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
                     wallet_address: withdrawAddress
                 })
             });
-            const data = await res.json();
+            
+            let data;
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                data = await res.json();
+            } else {
+                const text = await res.text();
+                console.error("Non-JSON response:", text);
+                throw new Error("Server Error: " + (res.statusText || "Invalid response"));
+            }
             
             if (data.error) throw new Error(data.error);
             
@@ -641,6 +724,26 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
                                    <span className="font-medium text-xs">Visa/Master</span>
                                </button>
+                               <button 
+                                   onClick={() => setDepositMethod('momo')}
+                                   className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${
+                                       depositMethod === 'momo' 
+                                       ? 'bg-pink-500/10 border-pink-500 text-pink-400' 
+                                       : 'bg-dark-950 border-gray-800 text-gray-400 hover:border-gray-600'
+                                   }`}
+                               >
+                                   <span className="font-bold text-xs">MoMo</span>
+                               </button>
+                               <button 
+                                   onClick={() => setDepositMethod('payos')}
+                                   className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${
+                                       depositMethod === 'payos' 
+                                       ? 'bg-blue-500/10 border-blue-500 text-blue-400' 
+                                       : 'bg-dark-950 border-gray-800 text-gray-400 hover:border-gray-600'
+                                   }`}
+                               >
+                                   <span className="font-bold text-xs">VietQR</span>
+                               </button>
                            </div>
 
                            {depositMethod === 'crypto' ? (
@@ -781,6 +884,72 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
                                            </div>
                                        </div>
                                    )}
+                               </div>
+                           ) : depositMethod === 'momo' ? (
+                               <div className="max-w-lg space-y-4">
+                                   <form onSubmit={handleMomoDeposit} className="space-y-4">
+                                        <div className="bg-pink-500/10 p-4 rounded-xl border border-pink-500/20 text-sm text-pink-300">
+                                            Nạp tiền qua Ví điện tử MoMo (QR Code / ATM). Tỉ giá quy đổi: $1 = 25,000 VND.
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-gray-300 mb-2">Số tiền nạp (USD)</label>
+                                            <div className="relative">
+                                                <input 
+                                                    type="number"
+                                                    value={amount}
+                                                    onChange={(e) => setAmount(e.target.value)}
+                                                    className="w-full bg-dark-950 border border-gray-700 rounded-lg pl-4 pr-16 py-3 text-white focus:ring-2 focus:ring-pink-500 outline-none font-mono text-lg"
+                                                    placeholder="10.00"
+                                                    min="1"
+                                                />
+                                                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-bold">$</span>
+                                            </div>
+                                            {amount && (
+                                                <p className="text-xs text-gray-500 mt-1 text-right">
+                                                    ≈ {(parseFloat(amount) * 25000).toLocaleString()} VND
+                                                </p>
+                                            )}
+                                        </div>
+                                        <button 
+                                            type="submit"
+                                            className="w-full py-4 rounded-xl text-base font-bold text-white transition-all transform hover:scale-[1.02] bg-gradient-to-r from-pink-600 to-pink-500 shadow-lg shadow-pink-500/20"
+                                        >
+                                            Thanh toán MoMo
+                                        </button>
+                                   </form>
+                               </div>
+                           ) : depositMethod === 'payos' ? (
+                               <div className="max-w-lg space-y-4">
+                                   <form onSubmit={handlePayOSDeposit} className="space-y-4">
+                                        <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20 text-sm text-blue-300">
+                                            Chuyển khoản ngân hàng tự động (VietQR). Hệ thống xác nhận sau 1-3 phút.
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-gray-300 mb-2">Số tiền nạp (USD)</label>
+                                            <div className="relative">
+                                                <input 
+                                                    type="number"
+                                                    value={amount}
+                                                    onChange={(e) => setAmount(e.target.value)}
+                                                    className="w-full bg-dark-950 border border-gray-700 rounded-lg pl-4 pr-16 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none font-mono text-lg"
+                                                    placeholder="10.00"
+                                                    min="1"
+                                                />
+                                                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-bold">$</span>
+                                            </div>
+                                            {amount && (
+                                                <p className="text-xs text-gray-500 mt-1 text-right">
+                                                    ≈ {(parseFloat(amount) * 25000).toLocaleString()} VND
+                                                </p>
+                                            )}
+                                        </div>
+                                        <button 
+                                            type="submit"
+                                            className="w-full py-4 rounded-xl text-base font-bold text-white transition-all transform hover:scale-[1.02] bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg shadow-blue-500/20"
+                                        >
+                                            Tạo mã VietQR
+                                        </button>
+                                   </form>
                                </div>
                            ) : (
                                <div className="max-w-lg">
