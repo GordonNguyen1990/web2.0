@@ -37,10 +37,39 @@ export default async (req: Request, context: Context) => {
 
             // 2. Connect to Supabase
             if (!supabaseUrl || !supabaseServiceKey) {
-                console.error("Missing Supabase Config");
+                await sendTelegramMessage(chatId, "❌ Lỗi: Thiếu biến môi trường SUPABASE_URL hoặc SUPABASE_SERVICE_ROLE_KEY.");
                 return new Response("Server Config Error", { status: 500 });
             }
-            const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+            // Check URL format
+            if (!supabaseUrl.includes(".supabase.co")) {
+                 await sendTelegramMessage(chatId, `❌ Lỗi Config: SUPABASE_URL có vẻ sai định dạng (Phải là https://xxx.supabase.co). Giá trị hiện tại: ${supabaseUrl}`);
+                 return new Response("Config Error", { status: 500 });
+            }
+
+            const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false
+                }
+            });
+
+            // 2.1 Test Connection & User Existence
+            const { data: userCheck, error: checkError } = await supabase
+                .from('profiles')
+                .select('id, role')
+                .eq('id', userId)
+                .single();
+
+            if (checkError) {
+                await sendTelegramMessage(chatId, `❌ Lỗi Kiểm tra User: ${JSON.stringify(checkError, null, 2)} \n\n(Khả năng cao là sai ID hoặc sai Key)`);
+                return new Response("OK", { status: 200 });
+            }
+
+            if (!userCheck) {
+                 await sendTelegramMessage(chatId, "❌ Không tìm thấy User ID này trong hệ thống.");
+                 return new Response("OK", { status: 200 });
+            }
 
             // 3. Update Profile
             const { error } = await supabase
