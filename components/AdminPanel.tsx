@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { SystemConfig, User, UserRole } from '../types';
 import { LayoutDashboardIcon, UsersIcon, SettingsIcon, LogOutIcon, ArrowRight, XIcon, CheckCircle } from './Icons';
+import { supabase } from '../services/supabaseClient';
 
 interface AdminPanelProps {
   config: SystemConfig;
@@ -77,6 +78,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ config, users, onUpdateConfig, 
             alert("Đã duyệt! Payout ID: " + (data.payout_data?.id || 'Manual'));
           } else {
             alert("Đã từ chối và hoàn tiền thành công.");
+          }
+
+          // DIRECT NOTIFY USER (Because approve_withdrawal might not trigger webhook fast enough)
+          // Fetch transaction details to notify
+          const { data: tx } = await supabase.from('transactions').select('*').eq('id', txId).single();
+          if (tx) {
+             fetch('/.netlify/functions/notify_transaction', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    record: { ...tx, status: action === 'APPROVE' ? 'COMPLETED' : 'FAILED' },
+                    type: 'UPDATE',
+                    old_record: { status: 'PENDING' }
+                })
+             }).catch(console.error);
           }
           
           fetchPendingWithdrawals(); // Reload list

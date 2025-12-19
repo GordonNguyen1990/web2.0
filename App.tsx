@@ -292,14 +292,27 @@ const App: React.FC = () => {
             await supabase.from('profiles').update({ balance: newBalance }).eq('id', currentUser.id);
             
             // Insert transaction to trigger Webhook Notification
-            await supabase.from('transactions').insert({
+            const { data: txData } = await supabase.from('transactions').insert({
                 user_id: currentUser.id,
                 type: type,
                 amount: amount,
                 status: 'COMPLETED',
                 date: new Date().toISOString(),
                 description: type === 'DEPOSIT' ? 'Nạp tiền thủ công' : 'Rút tiền'
-            });
+            }).select().single();
+
+            // DIRECT CALL TO NOTIFY (BACKUP FOR WEBHOOK)
+            if (txData) {
+                fetch('/.netlify/functions/notify_transaction', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        record: txData,
+                        type: 'INSERT' // Simulate Insert Payload
+                    })
+                }).catch(err => console.error("Direct notify failed", err));
+            }
+
         } catch (error) {
             console.error("Error syncing balance:", error);
         }
