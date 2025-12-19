@@ -325,7 +325,7 @@ const App: React.FC = () => {
   return (
     <>
       {view === AppView.LANDING && (
-        <LandingPage onNavigate={setView} />
+        <LandingPage onLoginClick={() => setView(AppView.LOGIN)} />
       )}
 
       {(view === AppView.LOGIN || view === AppView.REGISTER || view === AppView.FORGOT_PASSWORD || view === AppView.UPDATE_PASSWORD || view === AppView.MFA_VERIFY) && (

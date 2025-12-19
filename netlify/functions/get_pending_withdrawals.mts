@@ -25,14 +25,13 @@ export default async (req: Request, context: Context) => {
         if (!adminUser || adminUser.role !== 'ADMIN') {
             return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 403 });
         }
-    } else {
-         // Should be stricter here, but for now allow check
     }
 
-    // Get Pending or Processing Transactions
+    // Get Pending or Processing Transactions AND User Details
+    // Supabase Foreign Key Join syntax: select('*, profiles(email, full_name)')
     const { data: transactions, error } = await supabase
         .from('transactions')
-        .select('*')
+        .select('*, profiles(email, full_name)')
         .eq('type', 'WITHDRAW')
         .in('status', ['PENDING', 'PROCESSING'])
         .order('created_at', { ascending: false });

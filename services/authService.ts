@@ -142,7 +142,14 @@ export const getCurrentUser = async (): Promise<User | null> => {
       
       if (sessionError || !session) {
           // Bắt lỗi Invalid Refresh Token tại đây và trả về null để app coi như chưa login
-          if (sessionError) console.warn("Session Error (handled):", sessionError.message);
+          if (sessionError) {
+              console.warn("Session Error (handled):", sessionError.message);
+              // Nếu lỗi là do refresh token không hợp lệ (thường gặp), clear storage luôn
+              if (sessionError.message.includes("refresh_token") || sessionError.message.includes("Failed to fetch")) {
+                   localStorage.clear(); // Clear all
+                   // Hoặc chỉ clear auth token cụ thể nếu muốn
+              }
+          }
           return null;
       }
 

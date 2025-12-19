@@ -1,208 +1,223 @@
+
 import React from 'react';
-import { AppView } from '../types';
-import { TrendingUpIcon, WalletIcon, BotIcon, UsersIcon } from './Icons';
+import { motion } from 'framer-motion';
+import { Shield, TrendingUp, Zap, Globe, CreditCard, Lock, ArrowRight, CheckCircle } from './Icons';
 
 interface LandingPageProps {
-  onNavigate: (view: AppView) => void;
+  onLoginClick: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   return (
-    <div className="min-h-screen bg-[#020617] text-white overflow-x-hidden font-sans">
-      {/* Semantic Header */}
-      <header className="fixed w-full z-50 bg-dark-900/80 backdrop-blur-md border-b border-gray-800">
+    <div className="min-h-screen bg-dark-950 font-sans text-white selection:bg-brand-500 selection:text-white overflow-hidden">
+      
+      {/* Navbar */}
+      <nav className="fixed w-full z-50 bg-dark-950/80 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded flex items-center justify-center shadow-lg" aria-hidden="true">
-                <TrendingUpIcon className="text-white w-5 h-5" />
+              <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20">
+                <TrendingUp className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-white">WEB2 PRO</span>
+              <span className="text-2xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                Web2 Invest<span className="text-brand-500">.Pro</span>
+              </span>
             </div>
-            <nav className="flex items-center gap-4" aria-label="Main Navigation">
-              <button 
-                onClick={() => onNavigate(AppView.LOGIN)}
-                className="text-gray-300 hover:text-white font-medium text-sm transition-colors"
-                aria-label="Đăng nhập vào hệ thống"
-              >
-                Đăng nhập
-              </button>
-              <button 
-                onClick={() => onNavigate(AppView.REGISTER)}
-                className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-brand-500/20 transition-all hover:scale-105"
-                aria-label="Đăng ký tài khoản mới"
-              >
-                Bắt đầu ngay
-              </button>
-            </nav>
+            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
+              <a href="#features" className="hover:text-white transition-colors">Tính năng</a>
+              <a href="#payments" className="hover:text-white transition-colors">Thanh toán</a>
+              <a href="#stats" className="hover:text-white transition-colors">Thống kê</a>
+            </div>
+            <button
+              onClick={onLoginClick}
+              className="px-6 py-2.5 bg-white text-dark-950 font-bold rounded-full hover:bg-gray-200 transition-all transform hover:scale-105 shadow-lg shadow-white/10"
+            >
+              Đăng nhập / Đăng ký
+            </button>
           </div>
         </div>
-      </header>
+      </nav>
 
-      <main>
-        {/* Hero Section */}
-        <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden" aria-label="Giới thiệu chung">
-          {/* Background blobs */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full overflow-hidden pointer-events-none" aria-hidden="true">
-            <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-brand-500/10 rounded-full blur-[100px]"></div>
-            <div className="absolute top-[10%] right-[10%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[100px]"></div>
-          </div>
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        {/* Background Gradients */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none">
+            <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-brand-500/20 rounded-full blur-[120px] mix-blend-screen animate-pulse-slow"></div>
+            <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen animate-float"></div>
+        </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-8">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
-              </span>
-              <span className="text-brand-300 text-xs font-semibold uppercase tracking-wider">Nền tảng đầu tư 4.0</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-sm">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span className="text-sm font-medium text-gray-300">Hệ thống đầu tư tự động 24/7</span>
             </div>
-            
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-              Quản Lý Tài Sản <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-blue-400 to-purple-400">
-                Thông Minh & An Toàn
+            <h1 className="text-5xl lg:text-7xl font-display font-bold leading-tight mb-8">
+              Đầu tư thông minh <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-purple-500 to-orange-500">
+                Lợi nhuận bền vững
               </span>
             </h1>
-            
-            <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-400 mb-10">
-              Tối ưu hóa lợi nhuận với công nghệ Web3, nạp rút tự động và sự hỗ trợ phân tích từ AI Gemini.
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed">
+              Nền tảng tài chính phi tập trung thế hệ mới. Tích hợp thanh toán đa kênh (Crypto, MoMo, VietQR) giúp bạn nạp rút dễ dàng và sinh lời thụ động.
             </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button 
-                onClick={() => onNavigate(AppView.REGISTER)}
-                className="px-8 py-4 bg-white text-dark-950 font-bold rounded-xl text-lg hover:bg-gray-100 transition-colors shadow-xl"
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                onClick={onLoginClick}
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white font-bold rounded-xl shadow-lg shadow-brand-500/25 transition-all transform hover:scale-105 flex items-center justify-center gap-2"
               >
-                Đăng ký miễn phí
+                Bắt đầu ngay <ArrowRight className="w-5 h-5" />
               </button>
-              <button 
-                onClick={() => onNavigate(AppView.LOGIN)}
-                className="px-8 py-4 bg-dark-800 text-white font-bold rounded-xl text-lg border border-gray-700 hover:bg-dark-700 transition-colors"
-              >
-                Khám phá Dashboard
+              <button className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold rounded-xl backdrop-blur-sm transition-all">
+                Tìm hiểu thêm
               </button>
             </div>
+          </motion.div>
 
-            {/* Stats Preview */}
-            <div className="mt-20 p-4 bg-dark-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl max-w-4xl mx-auto shadow-2xl">
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-gray-800 text-center">
-                  <article>
-                      <div className="text-3xl font-bold text-white">50K+</div>
-                      <div className="text-sm text-gray-500 mt-1">Người dùng</div>
-                  </article>
-                  <article>
-                      <div className="text-3xl font-bold text-brand-400">$10M+</div>
-                      <div className="text-sm text-gray-500 mt-1">Tổng tài sản</div>
-                  </article>
-                  <article>
-                      <div className="text-3xl font-bold text-green-400">24/7</div>
-                      <div className="text-sm text-gray-500 mt-1">Nạp rút tự động</div>
-                  </article>
-                  <article>
-                      <div className="text-3xl font-bold text-purple-400">AI</div>
-                      <div className="text-sm text-gray-500 mt-1">Tư vấn đầu tư</div>
-                  </article>
-               </div>
+          {/* Floating UI Elements (Mockup) */}
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+            className="mt-20 relative mx-auto max-w-4xl"
+          >
+            <div className="bg-dark-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl shadow-brand-900/20">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Mock Card 1 */}
+                    <div className="bg-dark-950 p-4 rounded-xl border border-white/5">
+                        <div className="text-gray-400 text-sm mb-2">Tổng tài sản</div>
+                        <div className="text-3xl font-mono font-bold text-white">$24,592.00</div>
+                        <div className="text-green-400 text-sm mt-1 flex items-center gap-1">
+                            <TrendingUp className="w-3 h-3" /> +12.5% tháng này
+                        </div>
+                    </div>
+                     {/* Mock Card 2 */}
+                     <div className="bg-dark-950 p-4 rounded-xl border border-white/5">
+                        <div className="text-gray-400 text-sm mb-2">Lãi suất (APY)</div>
+                        <div className="text-3xl font-mono font-bold text-brand-500">18.2%</div>
+                        <div className="text-gray-500 text-sm mt-1">Cố định hàng năm</div>
+                    </div>
+                     {/* Mock Card 3 */}
+                     <div className="bg-dark-950 p-4 rounded-xl border border-white/5 flex items-center justify-between">
+                         <div>
+                            <div className="text-gray-400 text-sm mb-2">Trạng thái</div>
+                            <div className="text-green-400 font-bold flex items-center gap-2">
+                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                Hoạt động
+                            </div>
+                         </div>
+                         <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center text-green-500">
+                             <Zap className="w-6 h-6" />
+                         </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </section>
+          </motion.div>
+        </div>
+      </section>
 
-        {/* Features Section */}
-        <section className="py-20 bg-dark-900 border-y border-gray-800" aria-label="Tính năng nổi bật">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Features Section */}
+      <section id="features" className="py-24 bg-dark-900 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-white mb-4">Tại sao chọn Web2 Pro?</h2>
-              <p className="text-gray-400 max-w-2xl mx-auto">Chúng tôi kết hợp sự tiện lợi của Web2 và sự minh bạch của Web3.</p>
+                <h2 className="text-3xl md:text-5xl font-display font-bold mb-6">Tại sao chọn chúng tôi?</h2>
+                <p className="text-gray-400 max-w-2xl mx-auto text-lg">Hệ thống được tối ưu hóa cho cả người mới bắt đầu và nhà đầu tư chuyên nghiệp.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <article className="bg-dark-950 p-8 rounded-2xl border border-gray-800 hover:border-brand-500/50 transition-colors group">
-                <div className="w-14 h-14 bg-dark-900 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <WalletIcon className="w-8 h-8 text-brand-500" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-3">Ví Web3 Tích Hợp</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Kết nối trực tiếp với Metamask. Nạp và rút tiền (USDT/ETH) hoàn toàn tự động, minh bạch và an toàn.
-                </p>
-              </article>
-
-              <article className="bg-dark-950 p-8 rounded-2xl border border-gray-800 hover:border-purple-500/50 transition-colors group">
-                <div className="w-14 h-14 bg-dark-900 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <BotIcon className="w-8 h-8 text-purple-500" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-3">AI Advisor</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Trợ lý ảo Gemini AI phân tích danh mục đầu tư của bạn và đưa ra lời khuyên tối ưu hóa lợi nhuận.
-                </p>
-              </article>
-
-              <article className="bg-dark-950 p-8 rounded-2xl border border-gray-800 hover:border-green-500/50 transition-colors group">
-                <div className="w-14 h-14 bg-dark-900 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <UsersIcon className="w-8 h-8 text-green-500" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-3">Hệ Thống Partner</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Cơ chế hoa hồng hấp dẫn cho người giới thiệu. Quản lý hệ thống F1 trực quan và chi tiết.
-                </p>
-              </article>
+                {[
+                    { icon: Shield, title: "An toàn tuyệt đối", desc: "Bảo mật đa lớp, mã hóa dữ liệu và xác thực 2 yếu tố (2FA) giúp tài sản của bạn luôn an toàn." },
+                    { icon: Zap, title: "Nạp rút siêu tốc", desc: "Hệ thống xử lý tự động. Tiền về tài khoản chỉ trong vài phút thông qua Blockchain hoặc Ngân hàng." },
+                    { icon: Globe, title: "Đa nền tảng", desc: "Truy cập và quản lý danh mục đầu tư mọi lúc mọi nơi trên mọi thiết bị." }
+                ].map((feature, idx) => (
+                    <motion.div 
+                        key={idx}
+                        whileHover={{ y: -10 }}
+                        className="p-8 rounded-2xl bg-dark-800 border border-white/5 hover:border-brand-500/30 transition-all group"
+                    >
+                        <div className="w-14 h-14 bg-brand-500/10 rounded-xl flex items-center justify-center text-brand-500 mb-6 group-hover:bg-brand-500 group-hover:text-white transition-all">
+                            <feature.icon className="w-7 h-7" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-3 text-white">{feature.title}</h3>
+                        <p className="text-gray-400 leading-relaxed">{feature.desc}</p>
+                    </motion.div>
+                ))}
             </div>
-          </div>
-        </section>
+        </div>
+      </section>
 
-        {/* CTA Section */}
-        <section className="py-20 relative overflow-hidden" aria-label="Kêu gọi hành động">
-          <div className="max-w-5xl mx-auto px-4 relative z-10 text-center">
-              <h2 className="text-4xl font-bold text-white mb-6">Sẵn sàng để tăng trưởng tài sản?</h2>
-              <p className="text-xl text-gray-400 mb-10">Tham gia cùng 50,000+ nhà đầu tư thông minh ngay hôm nay.</p>
-              <button 
-                  onClick={() => onNavigate(AppView.REGISTER)}
-                  className="px-10 py-4 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-2xl transform hover:scale-105 transition-all text-lg"
-              >
-                  Tạo tài khoản ngay
-              </button>
-          </div>
-        </section>
-      </main>
+      {/* Payment Methods */}
+      <section id="payments" className="py-20 border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+            <h3 className="text-xl text-gray-400 mb-10 font-medium">Hỗ trợ thanh toán đa kênh</h3>
+            <div className="flex flex-wrap justify-center gap-12 items-center opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
+                <div className="flex items-center gap-2 text-2xl font-bold text-white"><span className="text-[#A50064]">MoMo</span> Wallet</div>
+                <div className="flex items-center gap-2 text-2xl font-bold text-white"><span className="text-[#0052CC]">VietQR</span> Banking</div>
+                <div className="flex items-center gap-2 text-2xl font-bold text-white"><span className="text-[#F3BA2F]">Binance</span> Pay</div>
+                <div className="flex items-center gap-2 text-2xl font-bold text-white"><span className="text-[#26A17B]">Tether</span> USDT</div>
+            </div>
+        </div>
+      </section>
 
-      {/* Semantic Footer */}
-      <footer className="bg-dark-950 border-t border-gray-900 pt-16 pb-8">
+      {/* CTA Section */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-brand-600/10"></div>
+        <div className="max-w-5xl mx-auto px-4 relative z-10 text-center">
+            <h2 className="text-4xl md:text-5xl font-display font-bold mb-8">Sẵn sàng gia tăng tài sản?</h2>
+            <p className="text-xl text-gray-300 mb-10">Đăng ký tài khoản ngay hôm nay và nhận ưu đãi đặc biệt cho thành viên mới.</p>
+            <button
+              onClick={onLoginClick}
+              className="px-12 py-5 bg-white text-dark-950 text-lg font-bold rounded-xl hover:bg-gray-100 transition-all shadow-2xl shadow-white/20 transform hover:-translate-y-1"
+            >
+              Tạo tài khoản miễn phí
+            </button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-dark-950 border-t border-white/10 pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
                 <div className="col-span-1 md:col-span-1">
-                    <div className="flex items-center gap-2 mb-4">
-                        <TrendingUpIcon className="text-brand-500 w-6 h-6" />
-                        <span className="text-lg font-bold text-white">WEB2 PRO</span>
+                    <div className="flex items-center gap-2 mb-6">
+                        <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
+                            <TrendingUp className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-xl font-bold text-white">Web2 Invest</span>
                     </div>
-                    <p className="text-gray-500 text-sm">
-                        Nền tảng đầu tư tài chính thế hệ mới, tiên phong ứng dụng công nghệ Blockchain và AI.
-                    </p>
+                    <p className="text-gray-500 text-sm">Nền tảng đầu tư tài chính số 1 Châu Á. Uy tín, Minh bạch, Hiệu quả.</p>
                 </div>
                 <div>
-                    <h4 className="text-white font-semibold mb-4">Công ty</h4>
-                    <ul className="space-y-2 text-sm text-gray-500">
-                        <li className="hover:text-brand-400 cursor-pointer">Về chúng tôi</li>
-                        <li className="hover:text-brand-400 cursor-pointer">Liên hệ</li>
-                        <li className="hover:text-brand-400 cursor-pointer">Tuyển dụng</li>
+                    <h4 className="font-bold text-white mb-4">Về chúng tôi</h4>
+                    <ul className="space-y-2 text-gray-500 text-sm">
+                        <li><a href="#" className="hover:text-brand-500">Giới thiệu</a></li>
+                        <li><a href="#" className="hover:text-brand-500">Đội ngũ</a></li>
+                        <li><a href="#" className="hover:text-brand-500">Liên hệ</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 className="text-white font-semibold mb-4">Hỗ trợ</h4>
-                    <ul className="space-y-2 text-sm text-gray-500">
-                        <li className="hover:text-brand-400 cursor-pointer">Trung tâm trợ giúp</li>
-                        <li className="hover:text-brand-400 cursor-pointer">Điều khoản sử dụng</li>
-                        <li className="hover:text-brand-400 cursor-pointer">Chính sách bảo mật</li>
+                    <h4 className="font-bold text-white mb-4">Hỗ trợ</h4>
+                    <ul className="space-y-2 text-gray-500 text-sm">
+                        <li><a href="#" className="hover:text-brand-500">Trung tâm trợ giúp</a></li>
+                        <li><a href="#" className="hover:text-brand-500">Điều khoản sử dụng</a></li>
+                        <li><a href="#" className="hover:text-brand-500">Chính sách bảo mật</a></li>
                     </ul>
                 </div>
-                 <div>
-                    <h4 className="text-white font-semibold mb-4">Cộng đồng</h4>
-                    <ul className="space-y-2 text-sm text-gray-500">
-                        <li className="hover:text-brand-400 cursor-pointer">Telegram Group</li>
-                        <li className="hover:text-brand-400 cursor-pointer">Twitter (X)</li>
-                        <li className="hover:text-brand-400 cursor-pointer">Facebook Fanpage</li>
-                    </ul>
+                <div>
+                    <h4 className="font-bold text-white mb-4">Kết nối</h4>
+                    <div className="flex gap-4">
+                        <div className="w-10 h-10 rounded-full bg-dark-800 flex items-center justify-center text-gray-400 hover:bg-brand-500 hover:text-white transition-all cursor-pointer">
+                            <Globe className="w-5 h-5" />
+                        </div>
+                        {/* More social icons can go here */}
+                    </div>
                 </div>
             </div>
-            <div className="border-t border-gray-900 pt-8 text-center text-gray-600 text-sm">
+            <div className="border-t border-white/5 pt-8 text-center text-gray-600 text-sm">
                 &copy; 2024 Web2 Invest Pro. All rights reserved.
             </div>
         </div>
