@@ -290,6 +290,16 @@ const App: React.FC = () => {
     if (!skipDbUpdate) {
         try {
             await supabase.from('profiles').update({ balance: newBalance }).eq('id', currentUser.id);
+            
+            // Insert transaction to trigger Webhook Notification
+            await supabase.from('transactions').insert({
+                user_id: currentUser.id,
+                type: type,
+                amount: amount,
+                status: 'COMPLETED',
+                date: new Date().toISOString(),
+                description: type === 'DEPOSIT' ? 'Nạp tiền thủ công' : 'Rút tiền'
+            });
         } catch (error) {
             console.error("Error syncing balance:", error);
         }

@@ -87,11 +87,28 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ config, users, onUpdateConfig, 
       }
   };
 
-  const handleSaveConfig = () => {
+  const handleSaveConfig = async () => {
     onUpdateConfig({
       interestRatePercent: Number(interestRate),
       withdrawalFeePercent: Number(withdrawalFee),
     });
+    
+    // Notify via Telegram
+    try {
+        const adminId = users.find(u => u.role === UserRole.ADMIN)?.id || 'admin';
+        await fetch('/.netlify/functions/notify_admin_action', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                type: 'CONFIG_UPDATE',
+                admin_id: adminId,
+                message: `Cấu hình lãi suất vừa được thay đổi:\n\n- Lãi suất tháng: **${interestRate}%**\n- Phí rút tiền: **${withdrawalFee}%**`
+            })
+        });
+    } catch (e) {
+        console.error("Failed to notify telegram", e);
+    }
+
     setMessage('Cập nhật thành công!');
     setTimeout(() => setMessage(''), 3000);
   };
