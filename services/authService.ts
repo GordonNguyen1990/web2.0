@@ -183,7 +183,9 @@ export const getCurrentUser = async (): Promise<User | null> => {
             balance: Number(profile.balance), // Supabase numeric trả về string, cần convert
             walletAddress: profile.wallet_address,
             joinedDate: profile.created_at,
-            referrerId: profile.referrer_id
+            referrerId: profile.referrer_id,
+            telegramUsername: profile.telegram_username,
+            telegramChatId: profile.telegram_chat_id
           };
       } catch (profileErr) {
           // If profile fetch fails or timeouts, return basic user info from session

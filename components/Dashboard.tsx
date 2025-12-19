@@ -1452,6 +1452,38 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
         </div>
 
         <div className="bg-dark-900 p-6 rounded-xl border border-gray-800 space-y-4">
+            <h3 className="font-semibold text-white border-b border-gray-800 pb-2 flex items-center gap-2">
+                <BotIcon className="w-5 h-5 text-brand-400" />
+                Thông báo Telegram
+            </h3>
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-sm text-gray-300">Nhận thông báo biến động số dư ngay lập tức.</p>
+                    {user.telegramUsername ? (
+                         <p className="text-xs text-green-400 mt-1 font-mono">Connected: @{user.telegramUsername}</p>
+                    ) : (
+                        <p className="text-xs text-gray-500 mt-1 italic">Chưa kết nối</p>
+                    )}
+                </div>
+                {!user.telegramChatId ? (
+                    <a 
+                        href={`https://t.me/${import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'Web2InvestDemoBot'}?start=${user.id}`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="px-4 py-2 bg-[#229ED9] hover:bg-[#1e8dbf] text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2"
+                    >
+                        <BotIcon className="w-4 h-4" />
+                        Kết nối Bot
+                    </a>
+                ) : (
+                    <button disabled className="px-4 py-2 bg-gray-800 text-gray-500 text-sm font-bold rounded-lg cursor-not-allowed border border-gray-700">
+                        Đã kết nối
+                    </button>
+                )}
+            </div>
+        </div>
+
+        <div className="bg-dark-900 p-6 rounded-xl border border-gray-800 space-y-4">
             <h3 className="font-semibold text-white border-b border-gray-800 pb-2">Bảo mật</h3>
             
             <div className="flex items-center justify-between">

@@ -13,6 +13,8 @@ export interface User {
   walletAddress?: string;
   joinedDate?: string;
   referrerId?: string; // ID of the person who referred this user
+  telegramUsername?: string;
+  telegramChatId?: string;
 }
 
 export interface Transaction {
