@@ -53,7 +53,7 @@ export default async (req: Request, context: Context) => {
 
             if (error) {
                 console.error("Supabase Update Error:", error);
-                await sendTelegramMessage(chatId, `❌ Lỗi hệ thống: ${error.message}`);
+                await sendTelegramMessage(chatId, `❌ Lỗi chi tiết: ${JSON.stringify(error, null, 2)}`);
             } else {
                 await sendTelegramMessage(chatId, "✅ Tài khoản đã được liên kết thành công! Bạn sẽ nhận được thông báo biến động số dư tại đây.");
             }
