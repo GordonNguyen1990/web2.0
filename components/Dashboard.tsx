@@ -1467,7 +1467,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
                 </div>
                 {!user.telegramChatId ? (
                     <a 
-                        href={`https://t.me/${import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'Web2InvestDemoBot'}?start=${user.id}`} 
+                        href={`https://t.me/${import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'Web2InvestDemo_Bot'}?start=${user.id}`} 
                         target="_blank" 
                         rel="noreferrer"
                         className="px-4 py-2 bg-[#229ED9] hover:bg-[#1e8dbf] text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2"
