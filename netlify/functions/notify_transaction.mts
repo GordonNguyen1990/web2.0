@@ -44,15 +44,19 @@ export default async (req: Request, context: Context) => {
     const amount = Number(record.amount).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
     const balance = Number(user.balance).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
+    // DEBUG LOG
+    console.log(`Processing Notify: Type=${payload.type}, TxType=${record.type}, Status=${record.status}`);
+
     // Case 1: DEPOSIT Success (Approved or Instant)
-    if (record.type === 'DEPOSIT' && record.status === 'COMPLETED' && (payload.type === 'INSERT' || (payload.type === 'UPDATE' && payload.old_record?.status !== 'COMPLETED'))) {
+    // Logic: Nếu là INSERT mới hoặc UPDATE thành COMPLETED
+    if (record.type === 'DEPOSIT' && record.status === 'COMPLETED') {
         message = `✅ **Nạp tiền thành công!**\n\n` +
                   `Tài khoản của bạn vừa được cộng: **${amount}**\n` +
                   `------------------------------\n` +
                   `💰 Số dư hiện tại: **${balance}**`;
     }
     // Case 2: WITHDRAW Success (Approved)
-    else if (record.type === 'WITHDRAW' && record.status === 'COMPLETED' && payload.type === 'UPDATE' && payload.old_record?.status !== 'COMPLETED') {
+    else if (record.type === 'WITHDRAW' && record.status === 'COMPLETED' && payload.type === 'UPDATE') {
         message = `💸 **Rút tiền thành công!**\n\n` +
                   `Yêu cầu rút **${amount}** đã được duyệt.\n` +
                   `Tiền đang được chuyển về ví của bạn.`;
