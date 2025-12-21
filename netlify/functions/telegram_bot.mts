@@ -24,9 +24,11 @@ export default async (req: Request, context: Context) => {
     const text = update.message.text;
 
     // Logic: Handle /start <uuid>
-    if (text.startsWith("/start")) {
-        const parts = text.split(" ");
-        if (parts.length === 2) {
+    // Update: Allow "start" without slash for testing convenience
+    const normalizedText = text.trim();
+    if (normalizedText.toLowerCase().startsWith("/start") || normalizedText.toLowerCase() === "start") {
+        const parts = normalizedText.split(" ");
+        if (parts.length >= 2) {
             const userId = parts[1];
             
             // 1. Validate UUID format (simple check)
