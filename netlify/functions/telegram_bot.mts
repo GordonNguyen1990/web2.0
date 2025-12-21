@@ -1,5 +1,5 @@
 
-import { Context } from "@netlify/functions";
+type Context = { geo?: { city?: string; country?: { code?: string } } };
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
