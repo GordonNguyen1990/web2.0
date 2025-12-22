@@ -13,15 +13,6 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: true, // Enable sourcemaps for debugging
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom', 'framer-motion', 'recharts'],
-            firebase: ['@supabase/supabase-js'],
-            ui: ['clsx', 'tailwind-merge', '@stripe/stripe-js', '@stripe/react-stripe-js']
-          }
-        }
-      },
       chunkSizeWarningLimit: 1000,
     },
     define: {
