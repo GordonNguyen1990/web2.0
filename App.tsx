@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [referrals, setReferrals] = useState<User[]>([]); 
   const [referrerId, setReferrerId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false); // Global loading state for Auth actions
+  const [isSessionLoading, setIsSessionLoading] = useState(true); // Initial session check
 
   // Định nghĩa hàm fetchReferrals ở cấp component để có thể gọi lại
   const handleFetchReferrals = async (userId: string) => {
@@ -67,7 +68,7 @@ const App: React.FC = () => {
           }
       }
 
-      // 2. Load Session với cơ chế Timeout nhanh và không chặn UI
+      // 2. Load Session
       
       try {
           // Fetch System Config concurrently
@@ -75,16 +76,8 @@ const App: React.FC = () => {
               if (remoteConfig) setConfig(remoteConfig);
           });
 
-          // Tạo Timeout Promise: Nếu sau 1.5 giây không load được thì hủy chờ
-          const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error("Connection timeout")), 1500)
-          );
-
-          // Đua tốc độ giữa việc lấy User và Timeout
-          const user = await Promise.race([
-              getCurrentUser(),
-              timeoutPromise
-          ]) as User | null;
+          // Wait for user session without aggressive timeout
+          const user = await getCurrentUser();
 
           if (user) {
             setCurrentUser(user);
@@ -97,10 +90,9 @@ const App: React.FC = () => {
             });
           }
       } catch (error) {
-          console.warn("Session check skipped due to timeout or error:", error);
-          // Không làm gì cả, mặc định sẽ là Landing Page
-          // Giúp người dùng không bị kẹt ở màn hình Loading
+          console.warn("Session check error:", error);
       } finally {
+          setIsSessionLoading(false);
       }
     };
 
@@ -351,6 +343,17 @@ const App: React.FC = () => {
   };
 
   // Luôn render UI, session check diễn ra ngầm để tránh chờ lâu
+
+  if (isSessionLoading) {
+    return (
+        <div className="min-h-screen bg-black flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-gray-400 font-medium">Đang khởi động...</p>
+            </div>
+        </div>
+    );
+  }
 
   return (
     <>

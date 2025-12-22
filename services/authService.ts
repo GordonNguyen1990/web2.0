@@ -134,10 +134,10 @@ export const updateUserPassword = async (newPassword: string) => {
 export const getCurrentUser = async (): Promise<User | null> => {
   try {
       // getSession tự động refresh token, nếu token lỗi nó sẽ trả về error hoặc session null
-      // Add timeout 2s for session check
+      // Add timeout 10s for session check
       const { data: { session }, error: sessionError } = await withTimeout(
           supabase.auth.getSession(), 
-          2000
+          10000
       ).catch(() => ({ data: { session: null }, error: new Error("Session timeout") }));
       
       if (sessionError || !session) {
@@ -156,7 +156,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
       if (!session?.user) return null;
 
       // Lấy thêm thông tin chi tiết từ bảng profiles
-      // Add timeout 3s for profile fetch
+      // Add timeout 10s for profile fetch
       try {
           const profilePromise = supabase
                 .from('profiles')
@@ -167,7 +167,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
 
           const { data: profile, error } = await withTimeout<any>(
             profilePromise,
-            3000
+            10000
           );
 
           if (error || !profile) {
