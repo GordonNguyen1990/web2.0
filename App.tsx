@@ -76,7 +76,7 @@ const App: React.FC = () => {
               if (remoteConfig) setConfig(remoteConfig);
           });
 
-          // OPTIMIZATION: Check LocalStorage for Supabase token first
+          // OPTIMIZATION 1: Check LocalStorage for Supabase token first
           // If no token exists, we can skip the expensive network check and render Landing immediately.
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://tiwbcztyyctoprpyskly.supabase.co';
           let projectId = 'tiwbcztyyctoprpyskly';
@@ -93,11 +93,28 @@ const App: React.FC = () => {
               return;
           }
 
-          // Wait for user session without aggressive timeout
+          // OPTIMIZATION 2: Optimistic UI with Cached User
+          // Try to load user from local storage to show Dashboard IMMEDIATELY while fetching fresh data
+          const cachedUserStr = localStorage.getItem('cachedUser');
+          if (cachedUserStr) {
+              try {
+                  const cachedUser = JSON.parse(cachedUserStr);
+                  setCurrentUser(cachedUser);
+                  setView(AppView.DASHBOARD);
+                  setIsSessionLoading(false); // Stop spinner immediately
+              } catch (e) {
+                  console.warn("Invalid cached user");
+              }
+          }
+
+          // Wait for user session (Background fetch if cached user exists)
           const user = await getCurrentUser();
 
           if (user) {
             setCurrentUser(user);
+            // Save to cache for next time
+            localStorage.setItem('cachedUser', JSON.stringify(user));
+            
             // Nếu đang ở trang Landing/Login/Register mà phát hiện đã login -> Vào thẳng Dashboard
             setView((prevView) => {
                 if (prevView === AppView.LOGIN || prevView === AppView.REGISTER || prevView === AppView.LANDING) {
@@ -105,6 +122,15 @@ const App: React.FC = () => {
                 }
                 return prevView; // Giữ nguyên nếu đang ở trang Reset Password hoặc MFA
             });
+          } else {
+             // If token existed but session is invalid/expired
+             if (cachedUserStr) {
+                 // We showed dashboard optimistically, but session is dead.
+                 // Revert to Landing and clear cache
+                 setCurrentUser(null);
+                 setView(AppView.LANDING);
+                 localStorage.removeItem('cachedUser');
+             }
           }
       } catch (error) {
           console.warn("Session check error:", error);
@@ -181,6 +207,7 @@ const App: React.FC = () => {
                   const user = await getCurrentUser();
                   if (user) {
                       setCurrentUser(user);
+                      localStorage.setItem('cachedUser', JSON.stringify(user));
                       setView(AppView.DASHBOARD);
                   }
               } else {
@@ -211,6 +238,7 @@ const App: React.FC = () => {
 
                   if (user) {
                     setCurrentUser(user);
+                    localStorage.setItem('cachedUser', JSON.stringify(user));
                     setView(AppView.DASHBOARD);
                   } else {
                       throw new Error("Không thể tải thông tin người dùng. Vui lòng thử lại.");
@@ -260,6 +288,7 @@ const App: React.FC = () => {
 
         if (user) {
             setCurrentUser(user);
+            localStorage.setItem('cachedUser', JSON.stringify(user));
             setView(AppView.DASHBOARD);
         } else {
              throw new Error("Không thể tải hồ sơ người dùng.");
@@ -276,6 +305,7 @@ const App: React.FC = () => {
         await logoutUser();
         // Clear local storage tab state on logout
         localStorage.removeItem('activeTab');
+        localStorage.removeItem('cachedUser');
     } catch (e) {
         console.error("Logout error", e);
     }
@@ -301,6 +331,7 @@ const App: React.FC = () => {
 
     const updatedUser = { ...currentUser, balance: newBalance };
     setCurrentUser(updatedUser);
+    localStorage.setItem('cachedUser', JSON.stringify(updatedUser));
 
     if (!skipDbUpdate) {
         try {
@@ -336,6 +367,7 @@ const App: React.FC = () => {
 
   const handleUserUpdate = async (updatedUser: User) => {
       setCurrentUser(updatedUser);
+      localStorage.setItem('cachedUser', JSON.stringify(updatedUser));
       try {
           if (updatedUser.walletAddress) {
               await supabase.from('profiles').update({ wallet_address: updatedUser.walletAddress }).eq('id', updatedUser.id);
