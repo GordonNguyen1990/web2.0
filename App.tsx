@@ -76,6 +76,23 @@ const App: React.FC = () => {
               if (remoteConfig) setConfig(remoteConfig);
           });
 
+          // OPTIMIZATION: Check LocalStorage for Supabase token first
+          // If no token exists, we can skip the expensive network check and render Landing immediately.
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://tiwbcztyyctoprpyskly.supabase.co';
+          let projectId = 'tiwbcztyyctoprpyskly';
+          try {
+             projectId = new URL(supabaseUrl).hostname.split('.')[0];
+          } catch (e) { /* ignore invalid url */ }
+          
+          const storageKey = `sb-${projectId}-auth-token`;
+          const hasToken = localStorage.getItem(storageKey);
+
+          if (!hasToken) {
+              // No token -> Not logged in -> Stop loading
+              setIsSessionLoading(false);
+              return;
+          }
+
           // Wait for user session without aggressive timeout
           const user = await getCurrentUser();
 
