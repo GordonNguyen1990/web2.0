@@ -5,6 +5,25 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+
+async function sendTelegramMessage(chatId: string, text: string) {
+    if (!telegramBotToken) return;
+    const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
+    try {
+        await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                chat_id: chatId, 
+                text: text,
+                parse_mode: 'Markdown'
+            })
+        });
+    } catch (e) {
+        console.error("Failed to send telegram message", e);
+    }
+}
 
 export default async (req: Request, context: Context) => {
   if (req.method !== "POST") {
@@ -73,6 +92,16 @@ export default async (req: Request, context: Context) => {
         } else {
             totalDistributed += interestAmount;
             userCount++;
+
+            // DIRECTLY NOTIFY USER (Bypass Supabase Webhook to ensure delivery)
+            if (user.telegram_chat_id) {
+                const msg = `📈 **Lợi nhuận hàng ngày!**\n\n` +
+                          `Chúc mừng! Bạn vừa nhận được: **${interestAmount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}** tiền lãi.\n` +
+                          `------------------------------\n` +
+                          `💰 Số dư mới: **${newBalance.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}**`;
+                
+                await sendTelegramMessage(user.telegram_chat_id, msg);
+            }
         }
     }
 
