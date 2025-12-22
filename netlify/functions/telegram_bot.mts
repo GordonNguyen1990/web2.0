@@ -7,6 +7,19 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
 
 export default async (req: Request, context: Context) => {
+  // Allow GET for connectivity test (Ping)
+  if (req.method === "GET") {
+      const isConfigured = !!process.env.SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY && !!process.env.TELEGRAM_BOT_TOKEN;
+      return new Response(JSON.stringify({ 
+          status: "online", 
+          configured: isConfigured,
+          message: "Telegram Bot Webhook is active."
+      }), { 
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+      });
+  }
+
   // Only allow POST requests (Webhooks)
   if (req.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
@@ -39,13 +52,13 @@ export default async (req: Request, context: Context) => {
 
             // 2. Connect to Supabase
             if (!supabaseUrl || !supabaseServiceKey) {
-                await sendTelegramMessage(chatId, "❌ Lỗi: Thiếu biến môi trường SUPABASE_URL hoặc SUPABASE_SERVICE_ROLE_KEY.");
+                await sendTelegramMessage(chatId, "❌ Lỗi: Server thiếu biến môi trường SUPABASE_URL hoặc SUPABASE_SERVICE_ROLE_KEY.");
                 return new Response("Server Config Error", { status: 500 });
             }
 
-            // Check URL format
-            if (!supabaseUrl.includes(".supabase.co")) {
-                 await sendTelegramMessage(chatId, `❌ Lỗi Config: SUPABASE_URL có vẻ sai định dạng (Phải là https://xxx.supabase.co). Giá trị hiện tại: ${supabaseUrl}`);
+            // Check URL format - RELAXED CHECK (Allow custom domains)
+            if (!supabaseUrl.startsWith("http")) {
+                 await sendTelegramMessage(chatId, `❌ Lỗi Config: SUPABASE_URL không hợp lệ. Giá trị hiện tại: ${supabaseUrl}`);
                  return new Response("Config Error", { status: 500 });
             }
 

@@ -349,6 +349,7 @@ const App: React.FC = () => {
 
             // DIRECT CALL TO NOTIFY (BACKUP FOR WEBHOOK)
             if (txData) {
+                console.log("🚀 Calling Direct Notify for Tx:", txData.id);
                 fetch('/.netlify/functions/notify_transaction', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -356,7 +357,12 @@ const App: React.FC = () => {
                         record: txData,
                         type: 'INSERT' // Simulate Insert Payload
                     })
-                }).catch(err => console.error("Direct notify failed", err));
+                })
+                .then(async (res) => {
+                     const text = await res.text();
+                     console.log("✅ Direct Notify Response:", res.status, text);
+                })
+                .catch(err => console.error("❌ Direct notify failed", err));
             }
 
         } catch (error) {

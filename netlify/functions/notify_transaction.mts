@@ -49,52 +49,51 @@ export default async (req: Request, context?: any) => {
     console.log(`Processing Notify: Type=${payload.type}, TxType=${record.type}, Status=${record.status}`);
 
     // Case 1: DEPOSIT Success (Approved or Instant)
-    // Logic: Nếu là INSERT mới hoặc UPDATE thành COMPLETED
     if (record.type === 'DEPOSIT' && record.status === 'COMPLETED') {
-        message = `✅ **Nạp tiền thành công!**\n\n` +
-                  `Tài khoản của bạn vừa được cộng: **${amount}**\n` +
+        message = `✅ <b>Nạp tiền thành công!</b>\n\n` +
+                  `Tài khoản của bạn vừa được cộng: <b>${amount}</b>\n` +
                   `------------------------------\n` +
-                  `💰 Số dư hiện tại: **${balance}**`;
+                  `💰 Số dư hiện tại: <b>${balance}</b>`;
     }
     // Case 2: WITHDRAW Success (Approved)
     else if (record.type === 'WITHDRAW' && record.status === 'COMPLETED' && payload.type === 'UPDATE') {
-        message = `💸 **Rút tiền thành công!**\n\n` +
-                  `Yêu cầu rút **${amount}** đã được duyệt.\n` +
+        message = `💸 <b>Rút tiền thành công!</b>\n\n` +
+                  `Yêu cầu rút <b>${amount}</b> đã được duyệt.\n` +
                   `Tiền đang được chuyển về ví của bạn.`;
     }
     // Case 3: INTEREST Received (System Profit)
     else if (record.type === 'INTEREST' && payload.type === 'INSERT') {
-        message = `📈 **Lợi nhuận hệ thống!**\n\n` +
-                  `Chúc mừng! Bạn vừa nhận được: **${amount}** tiền lãi.\n` +
+        message = `📈 <b>Lợi nhuận hệ thống!</b>\n\n` +
+                  `Chúc mừng! Bạn vừa nhận được: <b>${amount}</b> tiền lãi.\n` +
                   `------------------------------\n` +
-                  `💰 Số dư hiện tại: **${balance}**`;
+                  `💰 Số dư hiện tại: <b>${balance}</b>`;
     }
     // Case 4: COMMISSION Received (Referral Bonus)
     else if (record.type === 'COMMISSION' && payload.type === 'INSERT') {
-        message = `🌹 **Hoa hồng giới thiệu!**\n\n` +
-                  `Tuyệt vời! Bạn nhận được **${amount}** hoa hồng từ thành viên tuyến dưới.\n` +
+        message = `🌹 <b>Hoa hồng giới thiệu!</b>\n\n` +
+                  `Tuyệt vời! Bạn nhận được <b>${amount}</b> hoa hồng từ thành viên tuyến dưới.\n` +
                   `------------------------------\n` +
-                  `💰 Số dư hiện tại: **${balance}**`;
+                  `💰 Số dư hiện tại: <b>${balance}</b>`;
     }
     // Case 5: WITHDRAW Rejected
     else if (record.type === 'WITHDRAW' && record.status === 'FAILED' && payload.type === 'UPDATE') {
-        message = `❌ **Yêu cầu rút tiền bị từ chối**\n\n` +
-                  `Số tiền **${amount}** đã được hoàn lại vào tài khoản.\n` +
+        message = `❌ <b>Yêu cầu rút tiền bị từ chối</b>\n\n` +
+                  `Số tiền <b>${amount}</b> đã được hoàn lại vào tài khoản.\n` +
                   `Lý do: ${record.description || 'Admin từ chối'}\n` +
                   `------------------------------\n` +
-                  `💰 Số dư hiện tại: **${balance}**`;
+                  `💰 Số dư hiện tại: <b>${balance}</b>`;
     }
-    // Default: Generic Notification for other cases (e.g., Created Pending Deposit/Withdraw)
+    // Default: Generic Notification for other cases
     else if (payload.type === 'INSERT') {
-         message = `🆕 **Giao dịch mới: ${record.type}**\n\n` +
-                   `Số tiền: **${amount}**\n` +
-                   `Trạng thái: ${record.status}\n` +
-                   `💰 Số dư: ${balance}`;
+        message = `🆕 <b>Giao dịch mới: ${record.type}</b>\n\n` +
+                  `Số tiền: <b>${amount}</b>\n` +
+                  `Trạng thái: ${record.status}\n` +
+                  `💰 Số dư: ${balance}`;
     }
     else if (payload.type === 'UPDATE' && record.status !== payload.old_record?.status) {
-         message = `ℹ️ **Cập nhật trạng thái: ${record.type}**\n\n` +
+         message = `ℹ️ <b>Cập nhật trạng thái: ${record.type}</b>\n\n` +
                    `Trạng thái: ${payload.old_record.status} ➡️ ${record.status}\n` +
-                   `Số tiền: **${amount}**`;
+                   `Số tiền: <b>${amount}</b>`;
     }
 
     if (!message) {
@@ -114,13 +113,18 @@ export default async (req: Request, context?: any) => {
 
 async function sendTelegramMessage(chatId: string, text: string) {
     const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
-    await fetch(url, {
+    const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
             chat_id: chatId, 
             text: text,
-            parse_mode: 'Markdown'
+            parse_mode: 'HTML'
         })
     });
+    
+    if (!res.ok) {
+        const errText = await res.text();
+        console.error("Telegram API Error:", errText);
+    }
 }
