@@ -9,6 +9,7 @@ import { User, UserRole, AppView, SystemConfig, Transaction } from './types';
 import { sendWelcomeEmail, sendReferralNotification } from './services/emailService';
 import { loginUser, registerUser, logoutUser, getCurrentUser, getReferrals, checkMFAChallengeRequired, verifyMFALogin, loginWithGoogle } from './services/authService';
 import { supabase } from './services/supabaseClient';
+import { getSystemConfig, updateSystemConfig } from './services/configService';
 
 const INITIAL_CONFIG: SystemConfig = {
   withdrawalFeePercent: 1.5,
@@ -69,6 +70,11 @@ const App: React.FC = () => {
       // 2. Load Session với cơ chế Timeout nhanh và không chặn UI
       
       try {
+          // Fetch System Config concurrently
+          getSystemConfig().then(remoteConfig => {
+              if (remoteConfig) setConfig(remoteConfig);
+          });
+
           // Tạo Timeout Promise: Nếu sau 1.5 giây không load được thì hủy chờ
           const timeoutPromise = new Promise((_, reject) => 
               setTimeout(() => reject(new Error("Connection timeout")), 1500)
@@ -332,8 +338,9 @@ const App: React.FC = () => {
       }
   };
 
-  const handleConfigUpdate = (newConfig: SystemConfig) => {
+  const handleConfigUpdate = async (newConfig: SystemConfig) => {
       setConfig(newConfig);
+      await updateSystemConfig(newConfig);
   };
 
   // Wrapper function to trigger refresh from Dashboard

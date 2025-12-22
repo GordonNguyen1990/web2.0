@@ -20,6 +20,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ config, users, onUpdateConfig, 
   const [withdrawalFee, setWithdrawalFee] = useState(config.withdrawalFeePercent);
   const [message, setMessage] = useState('');
 
+  // Sync state with prop config (in case it loads late)
+  useEffect(() => {
+      setInterestRate(config.interestRatePercent);
+      setWithdrawalFee(config.withdrawalFeePercent);
+  }, [config]);
+
   // Withdrawals State
   const [pendingWithdrawals, setPendingWithdrawals] = useState<any[]>([]);
   const [isLoadingWithdrawals, setIsLoadingWithdrawals] = useState(false);
