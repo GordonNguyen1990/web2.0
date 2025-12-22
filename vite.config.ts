@@ -8,9 +8,11 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, (process as any).cwd(), '');
 
   return {
+    base: '/',
     plugins: [react()],
     build: {
       outDir: 'dist',
+      sourcemap: true, // Enable sourcemaps for debugging
       rollupOptions: {
         output: {
           manualChunks: {
