@@ -11,6 +11,16 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     build: {
       outDir: 'dist',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'framer-motion', 'recharts'],
+            firebase: ['@supabase/supabase-js'],
+            ui: ['clsx', 'tailwind-merge', '@stripe/stripe-js', '@stripe/react-stripe-js']
+          }
+        }
+      },
+      chunkSizeWarningLimit: 1000,
     },
     define: {
       // Expose env variables to the client code

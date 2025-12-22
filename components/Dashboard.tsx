@@ -1172,6 +1172,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
 
       if (isLoading && coins.length === 0) return <div className="text-center p-8 text-gray-400">Đang tải dữ liệu thị trường...</div>;
 
+      // Optimize: Only render charts if visible to reduce initial DOM load
+      // And simplify chart for list view
       return (
           <div className="space-y-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1201,22 +1203,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
                                   <th className="px-6 py-4">Giá (USD)</th>
                                   <th className="px-6 py-4">Biến động 24h</th>
                                   <th className="px-6 py-4">Vốn hóa</th>
-                                  <th className="px-6 py-4">Xu hướng 7 ngày</th>
+                                  <th className="px-6 py-4 hidden md:table-cell">Xu hướng 7 ngày</th>
                               </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-800">
                               {coins.map((coin) => {
                                   const isPositive = coin.price_change_percentage_24h >= 0;
-                                  // Data for sparkline
-                                  const chartData = coin.sparkline_in_7d.price.map((p, i) => ({ i, p }));
-                                  const minPrice = Math.min(...coin.sparkline_in_7d.price);
-                                  const maxPrice = Math.max(...coin.sparkline_in_7d.price);
-
+                                  
                                   return (
                                       <tr key={coin.id} className="hover:bg-dark-800/50 transition-colors">
                                           <td className="px-6 py-4">
                                               <div className="flex items-center gap-3">
-                                                  <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" />
+                                                  <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" loading="lazy" />
                                                   <div>
                                                       <div className="font-bold text-white">{coin.symbol.toUpperCase()}</div>
                                                       <div className="text-xs text-gray-500">{coin.name}</div>
@@ -1235,28 +1233,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
                                           <td className="px-6 py-4 text-gray-400 text-sm">
                                               ${(coin.market_cap / 1e9).toFixed(2)}B
                                           </td>
-                                          <td className="px-6 py-2 w-[200px]">
-                                              <div className="h-[60px] w-[160px]">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart data={chartData}>
-                                                        <defs>
-                                                            <linearGradient id={`gradient-${coin.id}`} x1="0" y1="0" x2="0" y2="1">
-                                                                <stop offset="5%" stopColor={isPositive ? "#4ade80" : "#f87171"} stopOpacity={0.3}/>
-                                                                <stop offset="95%" stopColor={isPositive ? "#4ade80" : "#f87171"} stopOpacity={0}/>
-                                                            </linearGradient>
-                                                        </defs>
-                                                        <YAxis hide domain={[minPrice, maxPrice]} />
-                                                        <Area 
-                                                            type="monotone" 
-                                                            dataKey="p" 
-                                                            stroke={isPositive ? "#4ade80" : "#f87171"} 
-                                                            strokeWidth={2} 
-                                                            fill={`url(#gradient-${coin.id})`}
-                                                            isAnimationActive={false}
-                                                        />
-                                                    </AreaChart>
-                                                </ResponsiveContainer>
-                                              </div>
+                                          <td className="px-6 py-2 w-[200px] hidden md:table-cell">
+                                              {/* Simple sparkline using SVG path directly for performance instead of heavy Recharts */}
+                                              <Sparkline data={coin.sparkline_in_7d.price} isPositive={isPositive} />
                                           </td>
                                       </tr>
                                   );
@@ -1266,6 +1245,32 @@ const Dashboard: React.FC<DashboardProps> = ({ user, config, onLogout, onTransac
                   </div>
               </div>
           </div>
+      );
+  };
+  
+  // Lightweight Sparkline Component
+  const Sparkline = ({ data, isPositive }: { data: number[], isPositive: boolean }) => {
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = max - min;
+      const width = 160;
+      const height = 50;
+      
+      const points = data.map((p, i) => {
+          const x = (i / (data.length - 1)) * width;
+          const y = height - ((p - min) / range) * height;
+          return `${x},${y}`;
+      }).join(' ');
+
+      return (
+          <svg width={width} height={height} className="overflow-visible">
+              <polyline 
+                  points={points} 
+                  fill="none" 
+                  stroke={isPositive ? "#4ade80" : "#f87171"} 
+                  strokeWidth="2" 
+              />
+          </svg>
       );
   };
 
