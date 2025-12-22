@@ -1,12 +1,13 @@
 
-import { Context } from "@netlify/functions";
+// Netlify Functions Context type is not used in the handler body, so we can omit the import
+// If you need it later, install @netlify/functions or define a minimal type yourself.
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
 
-export default async (req: Request, context: Context) => {
+export default async (req: Request, context?: any) => {
   if (req.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
   }
