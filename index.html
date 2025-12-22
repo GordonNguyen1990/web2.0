@@ -30,9 +30,30 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        document.getElementById('root').innerHTML = `
+          <div style="color: #ff4444; padding: 20px; font-family: monospace; background: #1a1a1a; min-height: 100vh;">
+            <h1>💥 Critical Error</h1>
+            <p>${message}</p>
+            <p>Source: ${source}:${lineno}:${colno}</p>
+            <pre>${error ? error.stack : 'No stack trace'}</pre>
+            <button onclick="location.reload()" style="padding: 10px 20px; margin-top: 20px; cursor: pointer;">Reload Page</button>
+          </div>
+        `;
+      };
+    </script>
   </head>
   <body class="bg-dark-950 text-white font-sans antialiased selection:bg-brand-500 selection:text-white">
-    <div id="root"></div>
+    <div id="root">
+      <div style="height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1rem;">
+        <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #0ea5e9; animation: spin 1s ease-in-out infinite;"></div>
+        <div style="font-family: sans-serif; color: #9ca3af;">Đang tải ứng dụng...</div>
+      </div>
+      <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+      </style>
+    </div>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
