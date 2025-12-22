@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { SystemConfig, User, UserRole } from '../types';
-import { LayoutDashboardIcon, UsersIcon, SettingsIcon, LogOutIcon, ArrowRight, XIcon, CheckCircle } from './Icons';
+import { LayoutDashboardIcon, UsersIcon, SettingsIcon, LogOutIcon, ArrowRight, XIcon, CheckCircle, TrendingUp } from './Icons';
 import { supabase } from '../services/supabaseClient';
 
 interface AdminPanelProps {
@@ -127,6 +127,31 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ config, users, onUpdateConfig, 
 
     setMessage('Cập nhật thành công!');
     setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleDistributeInterest = async () => {
+      if (!confirm(`Bạn có chắc muốn trả lãi cho tất cả thành viên?\nLãi suất: ${(Number(interestRate)/30).toFixed(2)}% / ngày`)) return;
+      
+      try {
+          const adminId = users.find(u => u.role === UserRole.ADMIN)?.id || 'admin';
+          const res = await fetch('/.netlify/functions/distribute_interest', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                  interestRatePercent: Number(interestRate),
+                  admin_id: adminId
+              })
+          });
+          
+          const data = await res.json();
+          if (res.ok) {
+              alert(`Thành công! Đã trả lãi cho ${data.processed} thành viên.\nTổng tiền: $${Number(data.total_distributed).toFixed(2)}`);
+          } else {
+              throw new Error(data.error || 'Unknown error');
+          }
+      } catch (err: any) {
+          alert('Lỗi: ' + err.message);
+      }
   };
 
   const TabButton = ({ id, label, icon: Icon }: any) => (
@@ -349,14 +374,33 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ config, users, onUpdateConfig, 
                               </div>
                           </div>
                       </div>
+                      
+                      <div className="md:col-span-2 bg-dark-900 p-6 rounded-2xl border border-gray-800">
+                          <h3 className="text-lg font-bold text-white mb-4">Tác vụ Admin</h3>
+                          <div className="flex gap-4">
+                              <button 
+                                  onClick={handleDistributeInterest}
+                                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-all"
+                              >
+                                  <TrendingUp className="w-5 h-5" />
+                                  Trả Lãi Hàng Ngày (Thủ công)
+                              </button>
+                          </div>
+                          <p className="mt-2 text-sm text-gray-500">Hệ thống sẽ tính lãi dựa trên số dư hiện tại của tất cả thành viên và cộng vào tài khoản của họ. Đồng thời gửi thông báo Telegram.</p>
+                      </div>
+
                       <div className="md:col-span-2">
                           <button 
                             onClick={handleSaveConfig}
-                            className="bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-brand-500/20"
+                            className="w-full bg-gradient-to-r from-brand-600 to-brand-400 hover:from-brand-500 hover:to-brand-300 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-brand-500/20"
                           >
                               Lưu Cấu Hình
                           </button>
-                          {message && <span className="ml-4 text-green-400">{message}</span>}
+                          {message && (
+                              <div className="mt-4 p-4 bg-green-500/20 text-green-400 rounded-xl text-center animate-fade-in">
+                                  {message}
+                              </div>
+                          )}
                       </div>
                   </div>
               )}
